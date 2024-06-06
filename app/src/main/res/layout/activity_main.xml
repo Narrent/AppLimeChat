@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="34dp"
+            android:id="@+id/Field1"
+            />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/messages_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="500dp"
+            android:layout_weight="1" />
+
+        <EditText
+            android:id="@+id/message_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="@string/massage_input"
+            android:hint="@string/massage_input"
+            android:minHeight="48dp"
+            android:textSize="24dp" />
+
+        <Button
+            android:id="@+id/send_message_b"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/send_button_name"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="0dp"
+            android:textSize="24dp"/>
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:id="@+id/Field2"
+            />
+
+</LinearLayout>

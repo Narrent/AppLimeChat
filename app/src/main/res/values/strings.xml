@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AppLimeChat</string>
+    <string name="send_button_name">Відправити</string>
+    <string name="massage_input">Введіть повідомлення</string>
+</resources>
