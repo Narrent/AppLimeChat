@@ -11,12 +11,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.MutableData;
+
 import android.widget.Button;
 import android.util.Log;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,12 +33,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+
     FirebaseDatabase database = FirebaseDatabase.getInstance("https://lime-chat-3781d-default-rtdb.europe-west1.firebasedatabase.app");
     DatabaseReference myRef = database.getReference("messages");
+    private DatabaseReference userCountRef = database.getReference("userCount");
 
     EditText mEditTextMessage;
     Button mSendButton;
     RecyclerView mMessagesRecycler;
+    private TextView mUserCountText;
     ArrayList<String> messages = new ArrayList<>();
 
     private static int maxLength = 150;
@@ -48,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         mSendButton = findViewById(R.id.send_message_b);
         mEditTextMessage = findViewById(R.id.message_input);
         mMessagesRecycler = findViewById(R.id.messages_recycler);
+        mUserCountText = findViewById(R.id.user_count_text);
 
         mMessagesRecycler.setLayoutManager(new LinearLayoutManager(this));
 
@@ -106,6 +115,53 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
+            }
+
+        });
+        userCountRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Long userCount = snapshot.getValue(Long.class);
+                mUserCountText.setText("Користувачів онлайн: " + userCount);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w(TAG, "Failed to read user count.", error.toException());
+            }
+        });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        updateUserCount(1);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        updateUserCount(-1);
+    }
+
+    private void updateUserCount(final int delta) {
+        userCountRef.runTransaction(new Transaction.Handler() {
+            @NonNull
+            @Override
+            public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+                Long currentCount = mutableData.getValue(Long.class);
+                if (currentCount == null) {
+                    currentCount = 0L;
+                }
+                mutableData.setValue(currentCount + delta);
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                if (error != null) {
+                    Log.w(TAG, "Failed to update user count.", error.toException());
+                }
             }
         });
     }

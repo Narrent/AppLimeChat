@@ -13,6 +13,15 @@
             android:layout_height="34dp"
             android:id="@+id/Field1"
             />
+
+        <TextView
+            android:id="@+id/user_count_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Користувачів онлайн: 0"
+            android:textSize="18sp"
+            android:padding="16dp"/>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/messages_recycler"
             android:layout_width="match_parent"
