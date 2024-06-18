@@ -1,57 +1,56 @@
 package com.example.applimechat;
 
 import android.os.Bundle;
-import android.view.View;
-
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Transaction;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.MutableData;
-
-import android.widget.Button;
+import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
-    FirebaseDatabase database = FirebaseDatabase.getInstance("https://lime-chat-3781d-default-rtdb.europe-west1.firebasedatabase.app");
-    DatabaseReference myRef = database.getReference("messages");
+    private FirebaseDatabase database = FirebaseDatabase.getInstance("https://lime-chat-3781d-default-rtdb.europe-west1.firebasedatabase.app");
+    private DatabaseReference myRef = database.getReference("messages");
     private DatabaseReference userCountRef = database.getReference("userCount");
 
-    EditText mEditTextMessage;
-    Button mSendButton;
-    RecyclerView mMessagesRecycler;
+    private EditText mEditTextMessage;
+    private Button mSendButton;
+    private RecyclerView mMessagesRecycler;
     private TextView mUserCountText;
-    ArrayList<String> messages = new ArrayList<>();
+    private ArrayList<Message> messages = new ArrayList<>();
+    private DataAdapter dataAdapter;
 
     private static int maxLength = 150;
+    private String deviceId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
 
         mSendButton = findViewById(R.id.send_message_b);
         mEditTextMessage = findViewById(R.id.message_input);
@@ -60,68 +59,63 @@ public class MainActivity extends AppCompatActivity {
 
         mMessagesRecycler.setLayoutManager(new LinearLayoutManager(this));
 
-        DataAdapter dataAdapter = new DataAdapter(this,messages);
-
+        dataAdapter = new DataAdapter(this, messages, deviceId);
         mMessagesRecycler.setAdapter(dataAdapter);
 
-        mSendButton.setOnClickListener(new View.OnClickListener()
-        {
-           @Override
-            public void onClick(View view)
-           {
-               String msg = mEditTextMessage.getText().toString();
-               if(msg.isEmpty())
-               {
-                   Toast.makeText(getApplicationContext(),"Поле пусте!", Toast.LENGTH_SHORT).show();
-                   return;
-               }
-               if (msg.length()==maxLength)
-               {
-                   Toast.makeText(getApplicationContext(),"Надто длине повідомлення!", Toast.LENGTH_SHORT).show();
-                   return;
-               }
+        mSendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String msg = mEditTextMessage.getText().toString();
+                if (msg.isEmpty()) {
+                    Toast.makeText(getApplicationContext(), "Поле пусте!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (msg.length() >= maxLength) {
+                    Toast.makeText(getApplicationContext(), "Надто длинне повідомлення!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-               myRef.push().setValue(msg);
-               mEditTextMessage.setText("");
+                Map<String, String> messageMap = new HashMap<>();
+                messageMap.put("text", msg);
+                messageMap.put("deviceId", deviceId);
 
-           }
-
+                myRef.push().setValue(messageMap);
+                mEditTextMessage.setText("");
+            }
         });
 
         myRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                String msg = snapshot.getValue(String.class);
-                messages.add(msg);
-                dataAdapter.notifyDataSetChanged();
-                mMessagesRecycler.smoothScrollToPosition(messages.size());
+                Message msg = snapshot.getValue(Message.class);
+                if (msg != null) {
+                    messages.add(msg);
+                    dataAdapter.notifyDataSetChanged();
+                    mMessagesRecycler.smoothScrollToPosition(messages.size());
+                }
             }
 
             @Override
-            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-            }
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
 
             @Override
-            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-
-            }
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
 
             @Override
-            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-            }
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-
+            public void onCancelled(@NonNull DatabaseError error) {}
         });
+
+        // Відстеження кількості користувачів
         userCountRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 Long userCount = snapshot.getValue(Long.class);
+                if (userCount == null) {
+                    userCount = 0L;
+                }
                 mUserCountText.setText("Користувачів онлайн: " + userCount);
             }
 

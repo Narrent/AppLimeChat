@@ -9,10 +9,30 @@
     android:orientation="vertical">
 
         <FrameLayout
+            android:id="@+id/Field1"
             android:layout_width="match_parent"
             android:layout_height="34dp"
-            android:id="@+id/Field1"
-            />
+            android:background="#32CD32">
+
+                <!-- Іконка -->
+                <ImageView
+                    android:id="@+id/icon"
+                    android:layout_width="54dp"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginStart="8dp" />
+
+                <!-- Напис -->
+                <TextView
+                    android:id="@+id/green_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lime Chat"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:layout_gravity="center" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/user_count_text"
@@ -45,10 +65,5 @@
             tools:layout_editor_absoluteX="0dp"
             tools:layout_editor_absoluteY="0dp"
             android:textSize="24dp"/>
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:id="@+id/Field2"
-            />
 
 </LinearLayout>
